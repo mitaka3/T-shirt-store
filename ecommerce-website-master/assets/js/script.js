@@ -1,88 +1,172 @@
 'use strict';
 
-// modal variables
+// Check if JavaScript is loading
+console.log("JavaScript is loaded correctly!");
+
+// MODAL VARIABLES
 const modal = document.querySelector('[data-modal]');
 const modalCloseBtn = document.querySelector('[data-modal-close]');
 const modalCloseOverlay = document.querySelector('[data-modal-overlay]');
 
-// modal function
-const modalCloseFunc = function () { modal.classList.add('closed') }
+// MODAL FUNCTION
+const modalCloseFunc = function () {
+  if (modal) modal.classList.add('closed');
+};
 
-// modal eventListener
-modalCloseOverlay.addEventListener('click', modalCloseFunc);
-modalCloseBtn.addEventListener('click', modalCloseFunc);
+// MODAL EVENT LISTENERS (CHECK IF ELEMENTS EXIST FIRST)
+if (modal && modalCloseBtn && modalCloseOverlay) {
+  modalCloseOverlay.addEventListener('click', modalCloseFunc);
+  modalCloseBtn.addEventListener('click', modalCloseFunc);
+}
 
-
-
-
-
-// notification toast variables
+// NOTIFICATION TOAST VARIABLES
 const notificationToast = document.querySelector('[data-toast]');
 const toastCloseBtn = document.querySelector('[data-toast-close]');
 
-// notification toast eventListener
-toastCloseBtn.addEventListener('click', function () {
-  notificationToast.classList.add('closed');
-});
+// NOTIFICATION TOAST EVENT LISTENER (CHECK IF ELEMENTS EXIST FIRST)
+if (notificationToast && toastCloseBtn) {
+  toastCloseBtn.addEventListener('click', function () {
+    notificationToast.classList.add('closed');
+  });
+}
 
-
-
-
-
-// mobile menu variables
+// MOBILE MENU VARIABLES
 const mobileMenuOpenBtn = document.querySelectorAll('[data-mobile-menu-open-btn]');
 const mobileMenu = document.querySelectorAll('[data-mobile-menu]');
 const mobileMenuCloseBtn = document.querySelectorAll('[data-mobile-menu-close-btn]');
 const overlay = document.querySelector('[data-overlay]');
 
-for (let i = 0; i < mobileMenuOpenBtn.length; i++) {
+if (mobileMenuOpenBtn.length > 0 && mobileMenuCloseBtn.length > 0) {
+  for (let i = 0; i < mobileMenuOpenBtn.length; i++) {
+    if (!mobileMenu[i]) continue;
 
-  // mobile menu function
-  const mobileMenuCloseFunc = function () {
-    mobileMenu[i].classList.remove('active');
-    overlay.classList.remove('active');
+    const mobileMenuCloseFunc = function () {
+      mobileMenu[i].classList.remove('active');
+      if (overlay) overlay.classList.remove('active');
+    };
+
+    mobileMenuOpenBtn[i].addEventListener('click', function () {
+      mobileMenu[i].classList.add('active');
+      if (overlay) overlay.classList.add('active');
+    });
+
+    mobileMenuCloseBtn[i].addEventListener('click', mobileMenuCloseFunc);
+    if (overlay) overlay.addEventListener('click', mobileMenuCloseFunc);
   }
-
-  mobileMenuOpenBtn[i].addEventListener('click', function () {
-    mobileMenu[i].classList.add('active');
-    overlay.classList.add('active');
-  });
-
-  mobileMenuCloseBtn[i].addEventListener('click', mobileMenuCloseFunc);
-  overlay.addEventListener('click', mobileMenuCloseFunc);
-
 }
 
-
-
-
-
-// accordion variables
+// ACCORDION VARIABLES
 const accordionBtn = document.querySelectorAll('[data-accordion-btn]');
 const accordion = document.querySelectorAll('[data-accordion]');
 
-for (let i = 0; i < accordionBtn.length; i++) {
+if (accordionBtn.length > 0) {
+  for (let i = 0; i < accordionBtn.length; i++) {
+    accordionBtn[i].addEventListener('click', function () {
+      if (!this.nextElementSibling) return;
 
-  accordionBtn[i].addEventListener('click', function () {
+      const clickedBtn = this.nextElementSibling.classList.contains('active');
 
-    const clickedBtn = this.nextElementSibling.classList.contains('active');
-
-    for (let i = 0; i < accordion.length; i++) {
-
-      if (clickedBtn) break;
-
-      if (accordion[i].classList.contains('active')) {
-
-        accordion[i].classList.remove('active');
-        accordionBtn[i].classList.remove('active');
-
+      for (let j = 0; j < accordion.length; j++) {
+        if (clickedBtn) break;
+        accordion[j].classList.remove('active');
+        accordionBtn[j].classList.remove('active');
       }
 
-    }
-
-    this.nextElementSibling.classList.toggle('active');
-    this.classList.toggle('active');
-
-  });
-
+      this.nextElementSibling.classList.toggle('active');
+      this.classList.toggle('active');
+    });
+  }
 }
+
+// SEARCH & CATEGORY FUNCTIONALITY
+const searchField = document.querySelector(".search-field");
+const searchButton = document.querySelector(".search-btn");
+const productItems = document.querySelectorAll(".showcase");
+const featuredSections = document.querySelectorAll(".new-arrival, .trending, .top-rated, .deal-of-the-day");
+const categoryLinks = document.querySelectorAll(".panel-list-item a, .submenu-category a, .menu-category a");
+const homeButton = document.querySelector(".home-category-btn");
+const cart = [];
+const cartCounter = document.querySelector(".cart-counter");
+
+// ADD TO CART FUNCTIONALITY
+const addToCartButtons = document.querySelectorAll(".add-to-cart");
+
+if (addToCartButtons.length > 0) {
+  addToCartButtons.forEach(button => {
+    button.addEventListener("click", function () {
+      const product = this.closest(".showcase");
+      const productName = product.querySelector(".showcase-title").innerText;
+      const productPrice = product.querySelector(".showcase-price").innerText;
+
+      const existingItem = cart.find(item => item.name === productName);
+      if (existingItem) {
+        alert("This item is already in your cart.");
+        return;
+      }
+
+      cart.push({ name: productName, price: productPrice });
+      updateCartCounter();
+      alert(`Added to cart: ${productName}`);
+    });
+  });
+}
+
+// UPDATE CART COUNTER
+function updateCartCounter() {
+  if (cartCounter) {
+    cartCounter.innerText = cart.length;
+  }
+}
+
+// CATEGORY FILTER FUNCTION
+if (categoryLinks.length > 0) {
+  categoryLinks.forEach(link => {
+    link.addEventListener("click", function (event) {
+      event.preventDefault();
+      const category = this.innerText.trim().toLowerCase();
+      console.log("Category Selected:", category);
+
+      productItems.forEach(item => {
+        item.style.display = "none";
+        const categoryElement = item.querySelector(".showcase-category");
+        if (categoryElement && categoryElement.innerText.toLowerCase().includes(category)) {
+          item.style.display = "block";
+        }
+      });
+
+      // Hide featured sections when filtering categories
+      featuredSections.forEach(section => {
+        section.style.display = "none";
+      });
+    });
+  });
+}
+
+// FIX HOME BUTTON TO SHOW ALL PRODUCTS & SECTIONS
+if (homeButton) {
+  homeButton.addEventListener("click", function () {
+    console.log("✅ Home button clicked, displaying all products and sections.");
+    productItems.forEach(item => {
+      item.style.display = "block";
+    });
+    featuredSections.forEach(section => {
+      section.style.display = "block";
+    });
+  });
+}
+
+// ENSURE ALL ITEMS & SECTIONS SHOW WHEN PAGE LOADS
+window.addEventListener("load", function () {
+  console.log("✅ Page loaded, ensuring all products and sections are visible.");
+  productItems.forEach(item => {
+    item.style.display = "block";
+  });
+  featuredSections.forEach(section => {
+    section.style.display = "block";
+  });
+});
+
+// DEBUGGING: LOG ALL BUTTON CLICKS
+document.querySelectorAll("button, input[type='search'], .menu-category a, .home-category-btn").forEach(element => {
+  element.addEventListener("click", () => console.log("✅ Element clicked:", element));
+});
