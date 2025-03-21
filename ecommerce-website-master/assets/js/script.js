@@ -23,7 +23,7 @@ if (modal && modalCloseBtn && modalCloseOverlay) {
 const notificationToast = document.querySelector('[data-toast]');
 const toastCloseBtn = document.querySelector('[data-toast-close]');
 
-// NOTIFICATION TOAST EVENT LISTENER (CHECK IF ELEMENTS EXIST FIRST)
+// NOTIFICATION TOAST EVENT LISTENER
 if (notificationToast && toastCloseBtn) {
   toastCloseBtn.addEventListener('click', function () {
     notificationToast.classList.add('closed');
@@ -85,18 +85,22 @@ const productItems = document.querySelectorAll(".showcase");
 const featuredSections = document.querySelectorAll(".new-arrival, .trending, .top-rated, .deal-of-the-day");
 const categoryLinks = document.querySelectorAll(".panel-list-item a, .submenu-category a, .menu-category a");
 const homeButton = document.querySelector(".home-category-btn");
-const cart = [];
-const cartCounter = document.querySelector(".cart-counter");
 
 // ADD TO CART FUNCTIONALITY
+const cart = [];
+const cartCounter = document.querySelector(".cart-counter");
 const addToCartButtons = document.querySelectorAll(".add-to-cart");
 
 if (addToCartButtons.length > 0) {
   addToCartButtons.forEach(button => {
     button.addEventListener("click", function () {
       const product = this.closest(".showcase");
-      const productName = product.querySelector(".showcase-title").innerText;
-      const productPrice = product.querySelector(".showcase-price").innerText;
+      if (!product) return;
+
+      const productName = product.querySelector(".showcase-title")?.innerText;
+      const productPrice = product.querySelector(".showcase-price")?.innerText;
+
+      if (!productName || !productPrice) return;
 
       const existingItem = cart.find(item => item.name === productName);
       if (existingItem) {
@@ -142,15 +146,64 @@ if (categoryLinks.length > 0) {
   });
 }
 
+// SEARCH FUNCTIONALITY (FIXED)
+if (searchButton && searchField) {
+  searchButton.addEventListener("click", searchProducts);
+
+  searchField.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      searchProducts();
+    }
+  });
+
+  function searchProducts() {
+    const query = searchField.value.trim().toLowerCase();
+
+    if (query === "") {
+      // Show all products and sections if search is empty
+      productItems.forEach(item => item.style.display = "block");
+      featuredSections.forEach(section => section.style.display = "block");
+      return;
+    }
+
+    let hasResults = false;
+
+    productItems.forEach(item => {
+      const titleElement = item.querySelector(".showcase-title");
+      if (!titleElement) return;
+
+      const title = titleElement.innerText.toLowerCase();
+      if (title.includes(query)) {
+        item.style.display = "block";
+        hasResults = true;
+      } else {
+        item.style.display = "none";
+      }
+    });
+
+    // Hide featured sections when searching
+    featuredSections.forEach(section => {
+      section.style.display = hasResults ? "none" : "block";
+    });
+  }
+}
+
 // FIX HOME BUTTON TO SHOW ALL PRODUCTS & SECTIONS
 if (homeButton) {
   homeButton.addEventListener("click", function () {
     console.log("✅ Home button clicked, displaying all products and sections.");
+    // Clear search field
+    searchField.value = "";
+    
+    // Show all products and sections
     productItems.forEach(item => {
-      item.style.display = "block";
+      item.style.display = "block"; // Reset product items to be visible
+      console.log("Product item displayed:", item); // Debug log to check each item's display state
     });
+
     featuredSections.forEach(section => {
-      section.style.display = "block";
+      section.style.display = "block"; // Also reset featured sections to be visible
+      console.log("Featured section displayed:", section); // Debug log to check each section's display state
     });
   });
 }
@@ -158,12 +211,8 @@ if (homeButton) {
 // ENSURE ALL ITEMS & SECTIONS SHOW WHEN PAGE LOADS
 window.addEventListener("load", function () {
   console.log("✅ Page loaded, ensuring all products and sections are visible.");
-  productItems.forEach(item => {
-    item.style.display = "block";
-  });
-  featuredSections.forEach(section => {
-    section.style.display = "block";
-  });
+  productItems.forEach(item => item.style.display = "block");
+  featuredSections.forEach(section => section.style.display = "block");
 });
 
 // DEBUGGING: LOG ALL BUTTON CLICKS
